@@ -1,0 +1,96 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+  <interface name="com.wavemux.Daemon">
+    <!-- Channel Management -->
+    <method name="ListChannels">
+      <arg name="channels" type="a(sssibbb)" direction="out"/>
+    </method>
+    <method name="SetChannelVolume">
+      <arg name="channelId" type="s" direction="in"/>
+      <arg name="volume" type="i" direction="in"/>
+      <arg name="success" type="b" direction="out"/>
+    </method>
+    <method name="SetChannelMute">
+      <arg name="channelId" type="s" direction="in"/>
+      <arg name="muted" type="b" direction="in"/>
+      <arg name="success" type="b" direction="out"/>
+    </method>
+    <method name="SetChannelInclude">
+      <arg name="channelId" type="s" direction="in"/>
+      <arg name="mixId" type="s" direction="in"/>
+      <arg name="included" type="b" direction="in"/>
+      <arg name="success" type="b" direction="out"/>
+    </method>
+
+    <!-- Stream Management -->
+    <method name="ListStreams">
+      <arg name="streams" type="a(ussss)" direction="out"/>
+    </method>
+    <method name="MoveStreamToChannel">
+      <arg name="streamId" type="u" direction="in"/>
+      <arg name="channelId" type="s" direction="in"/>
+      <arg name="success" type="b" direction="out"/>
+    </method>
+
+    <!-- Routing Rules -->
+    <method name="AddRoutingRule">
+      <arg name="pattern" type="s" direction="in"/>
+      <arg name="channelId" type="s" direction="in"/>
+    </method>
+    <method name="RemoveRoutingRule">
+      <arg name="pattern" type="s" direction="in"/>
+    </method>
+    <method name="GetRoutingRules">
+      <arg name="rules" type="a(ss)" direction="out"/>
+    </method>
+
+    <!-- Device Management -->
+    <method name="ListOutputDevices">
+      <arg name="devices" type="a(sss)" direction="out"/>
+    </method>
+    <method name="ListInputDevices">
+      <arg name="devices" type="a(sss)" direction="out"/>
+    </method>
+    <method name="SetOutputDevice">
+      <arg name="deviceId" type="s" direction="in"/>
+      <arg name="success" type="b" direction="out"/>
+    </method>
+    <method name="GetOutputDevice">
+      <arg name="deviceId" type="s" direction="out"/>
+    </method>
+
+    <!-- Master Volume -->
+    <method name="SetMasterVolume">
+      <arg name="volume" type="i" direction="in"/>
+      <arg name="success" type="b" direction="out"/>
+    </method>
+    <method name="GetMasterVolume">
+      <arg name="volume" type="i" direction="out"/>
+    </method>
+
+    <!-- Configuration -->
+    <method name="IsSetupComplete">
+      <arg name="complete" type="b" direction="out"/>
+    </method>
+    <method name="SetSetupComplete">
+      <arg name="complete" type="b" direction="in"/>
+    </method>
+    <method name="SaveConfig"/>
+    <method name="LoadConfig"/>
+
+    <!-- Signals -->
+    <signal name="ChannelsChanged"/>
+    <signal name="StreamsChanged"/>
+    <signal name="StreamAdded">
+      <arg name="streamId" type="u"/>
+      <arg name="appName" type="s"/>
+    </signal>
+    <signal name="StreamRemoved">
+      <arg name="streamId" type="u"/>
+    </signal>
+    <signal name="Error">
+      <arg name="message" type="s"/>
+    </signal>
+  </interface>
+</node>

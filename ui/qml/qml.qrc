@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/WaveMux/qml">
+        <file>Main.qml</file>
+        <file>ConnectionError.qml</file>
+        <file>SetupWizard.qml</file>
+        <file>MainView.qml</file>
+        <file>MixerView.qml</file>
+        <file>ChannelStrip.qml</file>
+        <file>AppsView.qml</file>
+        <file>SettingsView.qml</file>
+    </qresource>
+</RCC>

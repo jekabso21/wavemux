@@ -1,0 +1,17 @@
+build/
+.cache/
+*.o
+*.so
+*.a
+moc_*
+qrc_*
+*_autogen/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.user
+.idea/
+.vscode/
+*.swp
+*~
