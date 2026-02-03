@@ -533,7 +533,7 @@ void AudioManager::syncExistingStreams() {
         return;
     }
 
-    bool foundExistingAssignments = false;
+    bool changed = false;
 
     for (const auto &line : output.split('\n', Qt::SkipEmptyParts)) {
         auto parts = line.split('\t');
@@ -541,14 +541,25 @@ void AudioManager::syncExistingStreams() {
             continue;
         }
 
-        uint32_t streamId = parts[0].toUInt();
-        uint32_t sinkIndex = parts[1].toUInt();
+        bool okStream = false;
+        const uint32_t streamId = parts[0].toUInt(&okStream);
+        if (!okStream) {
+            continue;
+        }
+
+        bool okSink = false;
+        const uint32_t sinkIndex = parts[1].toUInt(&okSink);
+        if (!okSink) {
+            continue;
+        }
 
         // Record existing assignments on our channel sinks
         if (sinkIndexToChannelId.contains(sinkIndex)) {
             QString channelId = sinkIndexToChannelId[sinkIndex];
-            m_streamAssignments[streamId] = channelId;
-            foundExistingAssignments = true;
+            if (m_streamAssignments.value(streamId) != channelId) {
+                m_streamAssignments[streamId] = channelId;
+                changed = true;
+            }
             qInfo() << "Existing stream" << streamId << "on channel" << channelId;
             continue;
         }
@@ -571,6 +582,7 @@ void AudioManager::syncExistingStreams() {
             QRegularExpression re(rule.matchPattern, QRegularExpression::CaseInsensitiveOption);
             if (re.match(info->appName).hasMatch() || re.match(info->processName).hasMatch()) {
                 moveStreamToChannel(streamId, rule.targetChannel);
+                changed = true;
                 routed = true;
                 break;
             }
@@ -579,13 +591,16 @@ void AudioManager::syncExistingStreams() {
         if (!routed) {
             QString cmd = QString("pactl move-sink-input %1 %2").arg(streamId).arg(m_unassignedSinkName);
             if (runCommand(cmd)) {
-                m_streamAssignments.remove(streamId);
+                if (m_streamAssignments.contains(streamId)) {
+                    m_streamAssignments.remove(streamId);
+                    changed = true;
+                }
                 qInfo() << "Moved stream" << streamId << "(" << info->appName << ") to silent sink";
             }
         }
     }
 
-    if (foundExistingAssignments) {
+    if (changed) {
         emit streamsChanged();
     }
 }
