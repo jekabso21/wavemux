@@ -124,16 +124,31 @@ Rectangle {
                                 property bool dragging: false
                                 property int dragVolume: 0
                                 property int displayVolume: dragging ? dragVolume : modelData.personalVolume
+                                property bool isMuted: modelData.personalMuted
 
                                 Column {
                                     anchors.fill: parent
                                     spacing: 4
 
-                                    // Label
-                                    Label {
+                                    // Label with mute toggle
+                                    Rectangle {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: "🎧"
-                                        font.pixelSize: 12
+                                        width: 24
+                                        height: 24
+                                        radius: 12
+                                        color: personalSlider.isMuted ? "#4CAF50" : "transparent"
+
+                                        Label {
+                                            anchors.centerIn: parent
+                                            text: personalSlider.isMuted ? "🔇" : "🎧"
+                                            font.pixelSize: 12
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: daemon.setChannelPersonalMute(modelData.id, !personalSlider.isMuted)
+                                        }
                                     }
 
                                     // Slider track
@@ -156,7 +171,7 @@ Rectangle {
                                                 width: parent.width
                                                 height: parent.height * (personalSlider.displayVolume / 100)
                                                 radius: 5
-                                                color: "#4CAF50"
+                                                color: personalSlider.isMuted ? "#555" : "#4CAF50"
                                             }
                                         }
 
@@ -165,7 +180,7 @@ Rectangle {
                                             width: 28
                                             height: 14
                                             radius: 7
-                                            color: personalMouse.pressed ? "#4CAF50" : "#fff"
+                                            color: personalMouse.pressed ? "#4CAF50" : (personalSlider.isMuted ? "#888" : "#fff")
                                             x: (parent.width - width) / 2
                                             y: personalTrack.y + personalTrack.height * (1 - personalSlider.displayVolume / 100) - height / 2
 
@@ -208,7 +223,7 @@ Rectangle {
                                         text: personalSlider.displayVolume
                                         font.pixelSize: 10
                                         font.bold: true
-                                        color: "#4CAF50"
+                                        color: personalSlider.isMuted ? "#555" : "#4CAF50"
                                     }
                                 }
                             }
@@ -225,6 +240,7 @@ Rectangle {
                                 property bool dragging: false
                                 property int dragVolume: 0
                                 property int displayVolume: dragging ? dragVolume : modelData.streamVolume
+                                property bool isMuted: modelData.streamMuted
 
                                 Behavior on opacity { NumberAnimation { duration: 200 } }
 
@@ -232,11 +248,25 @@ Rectangle {
                                     anchors.fill: parent
                                     spacing: 4
 
-                                    // Label
-                                    Label {
+                                    // Label with mute toggle
+                                    Rectangle {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: "📡"
-                                        font.pixelSize: 12
+                                        width: 24
+                                        height: 24
+                                        radius: 12
+                                        color: streamSlider.isMuted ? "#9C27B0" : "transparent"
+
+                                        Label {
+                                            anchors.centerIn: parent
+                                            text: streamSlider.isMuted ? "🔇" : "📡"
+                                            font.pixelSize: 12
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: daemon.setChannelStreamMute(modelData.id, !streamSlider.isMuted)
+                                        }
                                     }
 
                                     // Slider track
@@ -259,7 +289,7 @@ Rectangle {
                                                 width: parent.width
                                                 height: parent.height * (streamSlider.displayVolume / 100)
                                                 radius: 5
-                                                color: "#9C27B0"
+                                                color: streamSlider.isMuted ? "#555" : "#9C27B0"
                                             }
                                         }
 
@@ -268,7 +298,7 @@ Rectangle {
                                             width: 28
                                             height: 14
                                             radius: 7
-                                            color: streamMouse.pressed ? "#9C27B0" : "#fff"
+                                            color: streamMouse.pressed ? "#9C27B0" : (streamSlider.isMuted ? "#888" : "#fff")
                                             x: (parent.width - width) / 2
                                             y: streamTrack.y + streamTrack.height * (1 - streamSlider.displayVolume / 100) - height / 2
 
@@ -311,7 +341,7 @@ Rectangle {
                                         text: streamSlider.displayVolume
                                         font.pixelSize: 10
                                         font.bold: true
-                                        color: "#9C27B0"
+                                        color: streamSlider.isMuted ? "#555" : "#9C27B0"
                                     }
                                 }
                             }

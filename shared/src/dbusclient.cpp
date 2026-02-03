@@ -119,6 +119,8 @@ void DBusClient::fetchChannels() {
         ch.muted = map["muted"].toBool();
         ch.personalVolume = map["personalVolume"].toInt();
         ch.streamVolume = map["streamVolume"].toInt();
+        ch.personalMuted = map["personalMuted"].toBool();
+        ch.streamMuted = map["streamMuted"].toBool();
         m_channels.append(ch);
     }
     emit channelsChanged();
@@ -255,6 +257,18 @@ bool DBusClient::setChannelStreamVolume(const QString &channelId, int volume) {
     return reply.isValid() && reply.value();
 }
 
+bool DBusClient::setChannelPersonalMute(const QString &channelId, bool muted) {
+    if (!m_connected) return false;
+    QDBusReply<bool> reply = m_channelInterface->call("SetChannelPersonalMute", channelId, muted);
+    return reply.isValid() && reply.value();
+}
+
+bool DBusClient::setChannelStreamMute(const QString &channelId, bool muted) {
+    if (!m_connected) return false;
+    QDBusReply<bool> reply = m_channelInterface->call("SetChannelStreamMute", channelId, muted);
+    return reply.isValid() && reply.value();
+}
+
 bool DBusClient::moveStreamToChannel(uint streamId, const QString &channelId) {
     if (!m_connected) return false;
     QDBusReply<bool> reply = m_streamInterface->call("MoveStreamToChannel", streamId, channelId);
@@ -377,6 +391,8 @@ QVariantList DBusClient::channelsVariant() const {
         map["muted"] = ch.muted;
         map["personalVolume"] = ch.personalVolume;
         map["streamVolume"] = ch.streamVolume;
+        map["personalMuted"] = ch.personalMuted;
+        map["streamMuted"] = ch.streamMuted;
         result.append(map);
     }
     return result;

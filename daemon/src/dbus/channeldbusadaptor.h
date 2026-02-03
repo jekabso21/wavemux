@@ -21,6 +21,8 @@ public slots:
     bool SetChannelMute(const QString &channelId, bool muted);
     bool SetChannelPersonalVolume(const QString &channelId, int volume);
     bool SetChannelStreamVolume(const QString &channelId, int volume);
+    bool SetChannelPersonalMute(const QString &channelId, bool muted);
+    bool SetChannelStreamMute(const QString &channelId, bool muted);
 
 signals:
     void ChannelsChanged();

@@ -300,6 +300,8 @@ QList<Channel> AudioManager::listChannels() const {
         ch.muted = state.muted;
         ch.personalVolume = state.personalVolume;
         ch.streamVolume = state.streamVolume;
+        ch.personalMuted = state.personalMuted;
+        ch.streamMuted = state.streamMuted;
         result.append(ch);
     }
     return result;
@@ -445,6 +447,40 @@ bool AudioManager::setChannelStreamVolume(const QString &channelId, int volume) 
             int effectiveVolume = (volume * m_masterVolume) / 100;
             runCommand(QString("pactl set-sink-input-volume %1 %2%").arg(sinkInputId).arg(effectiveVolume));
         }
+    }
+
+    emit channelsChanged();
+    return true;
+}
+
+bool AudioManager::setChannelPersonalMute(const QString &channelId, bool muted) {
+    if (!m_channels.contains(channelId)) {
+        return false;
+    }
+
+    auto &channel = m_channels[channelId];
+    channel.personalMuted = muted;
+
+    if (m_loopbackSinkInputs.contains(channelId)) {
+        uint32_t sinkInputId = m_loopbackSinkInputs[channelId];
+        runCommand(QString("pactl set-sink-input-mute %1 %2").arg(sinkInputId).arg(muted ? 1 : 0));
+    }
+
+    emit channelsChanged();
+    return true;
+}
+
+bool AudioManager::setChannelStreamMute(const QString &channelId, bool muted) {
+    if (!m_channels.contains(channelId)) {
+        return false;
+    }
+
+    auto &channel = m_channels[channelId];
+    channel.streamMuted = muted;
+
+    if (m_streamLoopbackSinkInputs.contains(channelId)) {
+        uint32_t sinkInputId = m_streamLoopbackSinkInputs[channelId];
+        runCommand(QString("pactl set-sink-input-mute %1 %2").arg(sinkInputId).arg(muted ? 1 : 0));
     }
 
     emit channelsChanged();

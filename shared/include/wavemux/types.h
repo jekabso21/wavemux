@@ -14,6 +14,8 @@ struct Channel {
     bool muted = false;
     int personalVolume = 100;  // 0-100, mix level for personal output
     int streamVolume = 0;      // 0-100, mix level for stream output
+    bool personalMuted = false;
+    bool streamMuted = false;
 };
 
 struct Stream {

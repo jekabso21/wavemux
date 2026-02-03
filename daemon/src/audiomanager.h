@@ -49,6 +49,8 @@ public:
     // Mix volumes per channel
     bool setChannelPersonalVolume(const QString &channelId, int volume);
     bool setChannelStreamVolume(const QString &channelId, int volume);
+    bool setChannelPersonalMute(const QString &channelId, bool muted);
+    bool setChannelStreamMute(const QString &channelId, bool muted);
 
     // Device management
     QList<Device> listOutputDevices() const;
@@ -101,6 +103,8 @@ private:
         bool muted = false;
         int personalVolume = 100;  // 0-100, mix level for personal output
         int streamVolume = 0;      // 0-100, mix level for stream output
+        bool personalMuted = false;
+        bool streamMuted = false;
     };
 
     bool createVirtualSink(const QString &name, const QString &description);

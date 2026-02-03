@@ -99,6 +99,8 @@ bool ConfigManager::load() {
         chConfig.muted = chObj["muted"].toBool(false);
         chConfig.personalVolume = chObj["personalVolume"].toInt(100);
         chConfig.streamVolume = chObj["streamVolume"].toInt(0);
+        chConfig.personalMuted = chObj["personalMuted"].toBool(false);
+        chConfig.streamMuted = chObj["streamMuted"].toBool(false);
         m_channelStates[channelId] = chConfig;
     }
 
@@ -163,6 +165,8 @@ bool ConfigManager::save() {
         chObj["muted"] = ch.muted;
         chObj["personalVolume"] = ch.personalVolume;
         chObj["streamVolume"] = ch.streamVolume;
+        chObj["personalMuted"] = ch.personalMuted;
+        chObj["streamMuted"] = ch.streamMuted;
         channelsArray.append(chObj);
     }
     root["channels"] = channelsArray;
@@ -218,6 +222,14 @@ void ConfigManager::applyConfig() {
 
     // Apply stream enabled state (this creates stream loopbacks)
     m_manager->setStreamEnabled(m_config.streamEnabled);
+
+    // Apply per-mix mute states (after loopbacks are created)
+    for (auto it = m_channelStates.begin(); it != m_channelStates.end(); ++it) {
+        const QString &channelId = it.key();
+        const ChannelConfig &chConfig = it.value();
+        m_manager->setChannelPersonalMute(channelId, chConfig.personalMuted);
+        m_manager->setChannelStreamMute(channelId, chConfig.streamMuted);
+    }
 
     // Apply routing rules
     for (const auto &rule : m_config.routingRules) {

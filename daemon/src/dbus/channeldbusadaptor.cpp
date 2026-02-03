@@ -22,6 +22,8 @@ QVariantList ChannelDBusAdaptor::ListChannels() {
         map["muted"] = ch.muted;
         map["personalVolume"] = ch.personalVolume;
         map["streamVolume"] = ch.streamVolume;
+        map["personalMuted"] = ch.personalMuted;
+        map["streamMuted"] = ch.streamMuted;
         result.append(map);
     }
     return result;
@@ -41,6 +43,14 @@ bool ChannelDBusAdaptor::SetChannelPersonalVolume(const QString &channelId, int 
 
 bool ChannelDBusAdaptor::SetChannelStreamVolume(const QString &channelId, int volume) {
     return m_manager->setChannelStreamVolume(channelId, volume);
+}
+
+bool ChannelDBusAdaptor::SetChannelPersonalMute(const QString &channelId, bool muted) {
+    return m_manager->setChannelPersonalMute(channelId, muted);
+}
+
+bool ChannelDBusAdaptor::SetChannelStreamMute(const QString &channelId, bool muted) {
+    return m_manager->setChannelStreamMute(channelId, muted);
 }
 
 } // namespace WaveMux

@@ -15,6 +15,8 @@ struct ChannelConfig {
     bool muted = false;
     int personalVolume = 100;
     int streamVolume = 0;
+    bool personalMuted = false;
+    bool streamMuted = false;
 };
 
 class ConfigManager : public QObject {
