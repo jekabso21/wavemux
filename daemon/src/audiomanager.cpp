@@ -508,8 +508,8 @@ void AudioManager::startStreamMonitor() {
         return;
     }
 
-    // First, move all existing unassigned streams to the silent sink
-    moveUnassignedStreamsToSilentSink();
+    // Sync existing streams: restore assignments and apply routing rules
+    syncExistingStreams();
 
     m_monitorProcess = new QProcess(this);
     connect(m_monitorProcess, &QProcess::readyReadStandardOutput,
@@ -519,55 +519,89 @@ void AudioManager::startStreamMonitor() {
     qInfo() << "Started stream monitor";
 }
 
-void AudioManager::moveUnassignedStreamsToSilentSink() {
-    // Get all current sink-inputs and move unassigned ones to silent sink
+void AudioManager::syncExistingStreams() {
+    // Build sink index -> channel ID map
+    QHash<uint32_t, QString> sinkIndexToChannelId;
+    for (const auto &channel : m_channels) {
+        if (auto info = getSinkInfo(channel.sinkName)) {
+            sinkIndexToChannelId[info->index] = channel.id;
+        }
+    }
+
     QString output;
     if (!runCommand("pactl list sink-inputs short", &output)) {
         return;
     }
 
+    bool changed = false;
+
     for (const auto &line : output.split('\n', Qt::SkipEmptyParts)) {
         auto parts = line.split('\t');
-        if (parts.size() >= 2) {
-            uint32_t streamId = parts[0].toUInt();
-            QString currentSink = parts[1];
+        if (parts.size() < 2) {
+            continue;
+        }
 
-            // Skip if already on one of our sinks
-            if (currentSink.startsWith("wavemux_")) {
-                continue;
+        bool okStream = false;
+        const uint32_t streamId = parts[0].toUInt(&okStream);
+        if (!okStream) {
+            continue;
+        }
+
+        bool okSink = false;
+        const uint32_t sinkIndex = parts[1].toUInt(&okSink);
+        if (!okSink) {
+            continue;
+        }
+
+        // Record existing assignments on our channel sinks
+        if (sinkIndexToChannelId.contains(sinkIndex)) {
+            QString channelId = sinkIndexToChannelId[sinkIndex];
+            if (m_streamAssignments.value(streamId) != channelId) {
+                m_streamAssignments[streamId] = channelId;
+                changed = true;
             }
+            qInfo() << "Existing stream" << streamId << "on channel" << channelId;
+            continue;
+        }
 
-            // Skip our own loopback streams
-            auto info = getStreamInfo(streamId);
-            if (info) {
-                // Skip loopback and system streams
-                if (info->appName.contains("Loopback", Qt::CaseInsensitive) ||
-                    info->processName.contains("loopback", Qt::CaseInsensitive) ||
-                    (info->appName.isEmpty() && info->processName.isEmpty())) {
-                    continue;
-                }
+        auto info = getStreamInfo(streamId);
+        if (!info) {
+            continue;
+        }
 
-                // Check if there's a routing rule for this stream
-                bool hasRule = false;
-                for (const auto &rule : m_routingRules) {
-                    QRegularExpression re(rule.matchPattern, QRegularExpression::CaseInsensitiveOption);
-                    if (re.match(info->appName).hasMatch() || re.match(info->processName).hasMatch()) {
-                        // Apply the routing rule
-                        moveStreamToChannel(streamId, rule.targetChannel);
-                        hasRule = true;
-                        break;
-                    }
-                }
+        // Skip loopback and system streams
+        if (info->appName.contains("Loopback", Qt::CaseInsensitive) ||
+            info->processName.contains("loopback", Qt::CaseInsensitive) ||
+            (info->appName.isEmpty() && info->processName.isEmpty())) {
+            continue;
+        }
 
-                if (!hasRule) {
-                    // Move to silent sink
-                    QString cmd = QString("pactl move-sink-input %1 %2").arg(streamId).arg(m_unassignedSinkName);
-                    if (runCommand(cmd)) {
-                        qInfo() << "Moved existing stream" << streamId << "(" << info->appName << ") to silent sink";
-                    }
-                }
+        // Apply routing rules or move to silent sink
+        bool routed = false;
+        for (const auto &rule : m_routingRules) {
+            QRegularExpression re(rule.matchPattern, QRegularExpression::CaseInsensitiveOption);
+            if (re.match(info->appName).hasMatch() || re.match(info->processName).hasMatch()) {
+                moveStreamToChannel(streamId, rule.targetChannel);
+                changed = true;
+                routed = true;
+                break;
             }
         }
+
+        if (!routed) {
+            QString cmd = QString("pactl move-sink-input %1 %2").arg(streamId).arg(m_unassignedSinkName);
+            if (runCommand(cmd)) {
+                if (m_streamAssignments.contains(streamId)) {
+                    m_streamAssignments.remove(streamId);
+                    changed = true;
+                }
+                qInfo() << "Moved stream" << streamId << "(" << info->appName << ") to silent sink";
+            }
+        }
+    }
+
+    if (changed) {
+        emit streamsChanged();
     }
 }
 

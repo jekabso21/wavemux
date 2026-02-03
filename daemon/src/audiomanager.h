@@ -121,7 +121,7 @@ private:
     void handleStreamEvent(const QString &eventType, uint32_t id);
     std::optional<StreamInfo> getStreamInfo(uint32_t id) const;
     void applyRoutingRules(uint32_t streamId, const QString &appName, const QString &processName);
-    void moveUnassignedStreamsToSilentSink();
+    void syncExistingStreams();
 
     // Loopback management
     bool createLoopback(const QString &sourceSink, const QString &targetSink);
