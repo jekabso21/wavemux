@@ -48,7 +48,7 @@ What's missing (planned):
 
 ## Screenshots
 
-*Coming soon!*
+![Screenshot](./docs/imgs/03-02-2026.png)
 
 ---
 
